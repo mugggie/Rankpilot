@@ -28,12 +28,8 @@ print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-# Navigate to API directory
-print_status "Navigating to API directory..."
-cd apps/api
-
-# Install dependencies
-print_status "Installing dependencies..."
+# Install dependencies from root (monorepo)
+print_status "Installing dependencies from root..."
 npm install
 
 # Check if dependencies are installed
@@ -54,10 +50,22 @@ if [ ! -d "node_modules/nodemailer" ]; then
     exit 1
 fi
 
+if [ ! -d "node_modules/@prisma/client" ]; then
+    print_error "Prisma client not found"
+    exit 1
+fi
+
 print_success "All dependencies installed correctly"
 
-# Build the application
+# Generate Prisma client
+print_status "Generating Prisma client..."
+cd packages/prisma
+npx prisma generate --schema=prisma/schema.prisma
+cd ../..
+
+# Build the API application
 print_status "Building TypeScript application..."
+cd apps/api
 npm run build
 
 if [ $? -eq 0 ]; then

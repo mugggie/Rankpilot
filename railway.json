@@ -9,11 +9,5 @@
     "healthcheckTimeout": 100,
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
-  },
-  "builds": [
-    {
-      "src": "apps/api/package.json",
-      "use": "@railway/node"
-    }
-  ]
+  }
 } 
