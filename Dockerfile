@@ -22,9 +22,8 @@ RUN npx prisma generate --schema=prisma/schema.prisma
 
 # Build the API
 WORKDIR /app/apps/api
-# Copy node_modules to API directory
+# Copy node_modules to API directory and skip npm install
 RUN cp -r ../../node_modules .
-RUN npm install
 RUN npm run build
 
 # Build the web app
