@@ -1,0 +1,175 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  tierId    String
+  createdAt DateTime @default(now())
+  isAdmin   Boolean  @default(false)
+  lastUsageAlertAt DateTime?
+  password  String?
+  orgName   String?
+  mobile    String?
+  
+  // Billing fields
+  stripeCustomerId String? @unique
+  stripeSubscriptionId String? @unique
+  subscriptionStatus String? // active, canceled, past_due, etc.
+  currentPeriodStart DateTime?
+  currentPeriodEnd DateTime?
+  
+  // Relations
+  projects Project[]
+  audits Audit[]
+  usageLogs UsageLog[]
+  autoAuditSettings AutoAuditSetting[]
+  billingHistory BillingHistory[]
+  apiKeys APIKey[]
+  supportTickets SupportTicket[]
+  tier Tier @relation(fields: [tierId], references: [id])
+}
+
+model Tier {
+  id         String @id @default(cuid())
+  name       String @unique
+  auditLimit Int
+  tokenLimit Int
+  price      Int
+  
+  // Relations
+  users User[]
+}
+
+model Project {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  createdAt DateTime @default(now())
+  
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  audits    Audit[]
+  autoAuditSettings AutoAuditSetting[]
+  
+  @@index([userId])
+}
+
+model Audit {
+  id             String   @id @default(cuid())
+  projectId      String
+  userId         String   // Add userId field
+  url            String
+  createdAt      DateTime @default(now())
+  status         String
+  score          Float?
+  competitorGaps Json?
+  schemaJSON     Json?
+  semanticData   Json?
+  
+  // Relations
+  project        Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  snapshots      AuditSnapshot[]
+  usageLogs      UsageLog[]
+  
+  @@index([userId])
+  @@index([projectId])
+}
+
+model AuditSnapshot {
+  id        String   @id @default(cuid())
+  auditId   String
+  timestamp DateTime @default(now())
+  score     Float
+  
+  // Relations
+  audit     Audit    @relation(fields: [auditId], references: [id], onDelete: Cascade)
+}
+
+model UsageLog {
+  id         String   @id @default(cuid())
+  userId     String
+  auditId    String?
+  tokensUsed Int
+  createdAt  DateTime @default(now())
+  
+  // Relations
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  audit      Audit?   @relation(fields: [auditId], references: [id], onDelete: SetNull)
+}
+
+model AutoAuditSetting {
+  id        String   @id @default(cuid())
+  userId    String
+  projectId String
+  frequency String   // daily, weekly, monthly
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model Setting {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+}
+
+model BillingHistory {
+  id        String   @id @default(cuid())
+  userId    String
+  amount    Int
+  currency  String
+  status    String
+  createdAt DateTime @default(now())
+  
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model APIKey {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  key         String   // Hashed API key
+  permissions String[] // Array of permissions
+  lastUsed    DateTime?
+  createdAt   DateTime @default(now())
+  expiresAt   DateTime?
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([key])
+}
+
+model SupportTicket {
+  id          String   @id @default(cuid())
+  userId      String?
+  name        String
+  email       String
+  subject     String
+  message     String
+  status      String   @default("open") // open, in_progress, resolved, closed
+  priority    String   @default("medium") // low, medium, high, urgent
+  assignedTo  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  resolvedAt  DateTime?
+  
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  @@index([userId])
+  @@index([status])
+  @@index([priority])
+}
