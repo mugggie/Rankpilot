@@ -16,6 +16,10 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# Generate Prisma client
+WORKDIR /app/packages/prisma
+RUN npx prisma generate --schema=prisma/schema.prisma
+
 # Build the API
 WORKDIR /app/apps/api
 RUN npm run build
@@ -44,9 +48,10 @@ RUN chown nextjs:nodejs .next
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
 
-# Copy API build
+# Copy API build and dependencies
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
 COPY --from=builder /app/apps/api/package.json ./apps/api/package.json
+COPY --from=builder /app/node_modules ./node_modules
 
 # Copy Prisma schema and migrations
 COPY --from=builder /app/packages/prisma ./packages/prisma
