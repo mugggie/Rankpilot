@@ -40,7 +40,8 @@
     "test": "jest",
     "lint": "eslint src/**/*.ts",
     "format": "prettier --write src/**/*.ts",
-    "start:no-stripe": "STRIPE_SECRET_KEY= npm start"
+    "start:no-stripe": "STRIPE_SECRET_KEY= npm start",
+    "postinstall": "echo 'Dependencies installed successfully'"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

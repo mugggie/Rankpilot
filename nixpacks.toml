@@ -3,14 +3,13 @@ nixPkgs = ["nodejs"]
 
 [phases.install]
 cmds = [
-  "npm install",
-  "cd packages/prisma && npx prisma generate --schema=prisma/schema.prisma",
-  "cd ../../apps/api && npm install"
+  "chmod +x railway-build-api.sh",
+  "./railway-build-api.sh"
 ]
 
 [phases.build]
 cmds = [
-  "cd apps/api && npm run build"
+  "echo 'Build completed in install phase'"
 ]
 
 [start]
