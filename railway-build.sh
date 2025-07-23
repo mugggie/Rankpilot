@@ -30,7 +30,7 @@ print_error() {
 
 # Install dependencies from root (monorepo)
 print_status "Installing dependencies from root..."
-npm install
+pnpm install --frozen-lockfile
 
 # Check if dependencies are installed
 if [ ! -d "node_modules" ]; then
@@ -66,6 +66,13 @@ cd ../..
 # Build the API application
 print_status "Building TypeScript application..."
 cd apps/api
+
+# Ensure node_modules is available in API directory
+if [ ! -d "node_modules" ]; then
+    print_status "Linking node_modules to API directory..."
+    ln -sf ../../node_modules node_modules
+fi
+
 npm run build
 
 if [ $? -eq 0 ]; then

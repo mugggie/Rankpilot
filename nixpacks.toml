@@ -2,12 +2,14 @@
 nixPkgs = ["nodejs", "pnpm"]
 
 [phases.install]
-cmds = ["pnpm install --frozen-lockfile"]
+cmds = [
+  "pnpm install --frozen-lockfile",
+  "cd packages/prisma && npx prisma generate --schema=prisma/schema.prisma"
+]
 
 [phases.build]
 cmds = [
-  "cd packages/prisma && npx prisma generate --schema=prisma/schema.prisma",
-  "cd ../../apps/api && npm run build"
+  "cd apps/api && npm run build"
 ]
 
 [start]

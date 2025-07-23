@@ -22,6 +22,8 @@ RUN npx prisma generate --schema=prisma/schema.prisma
 
 # Build the API
 WORKDIR /app/apps/api
+# Ensure node_modules is available in API directory
+RUN ln -sf ../../node_modules node_modules
 RUN npm run build
 
 # Build the web app
