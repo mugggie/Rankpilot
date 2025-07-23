@@ -83,30 +83,30 @@ export class AnalyticsService {
         audits: {
           some: {
             createdAt: {
-              gte: thirtyDaysAgo
-            }
-          }
-        }
-      }
+              gte: thirtyDaysAgo,
+            },
+          },
+        },
+      },
     });
 
     // Get new users this month
     const newUsersThisMonth = await prisma.user.count({
       where: {
         createdAt: {
-          gte: startOfMonth
-        }
-      }
+          gte: startOfMonth,
+        },
+      },
     });
 
     // Get subscription revenue (calculate from user tiers)
     const usersWithTiers = await prisma.user.findMany({
       where: {
-        subscriptionStatus: 'active'
+        subscriptionStatus: 'active',
       },
       include: {
-        tier: true
-      }
+        tier: true,
+      },
     });
 
     const subscriptionRevenue = usersWithTiers.reduce((total: number, user: any) => {
@@ -122,14 +122,14 @@ export class AnalyticsService {
       take: 10,
       orderBy: {
         audits: {
-          _count: 'desc'
-        }
+          _count: 'desc',
+        },
       },
       include: {
         tier: true,
         audits: true,
-        usageLogs: true
-      }
+        usageLogs: true,
+      },
     });
 
     const topUsers = topPerformingUsers.map((user: any) => ({
@@ -137,8 +137,11 @@ export class AnalyticsService {
       userName: user.name || 'Unknown',
       email: user.email,
       auditsCreated: user.audits.length,
-      totalTokensUsed: user.usageLogs.reduce((sum: number, log: any) => sum + (log.tokensUsed || 0), 0),
-      subscriptionTier: user.tier.name
+      totalTokensUsed: user.usageLogs.reduce(
+        (sum: number, log: any) => sum + (log.tokensUsed || 0),
+        0,
+      ),
+      subscriptionTier: user.tier.name,
     }));
 
     // Get user growth data
@@ -151,7 +154,7 @@ export class AnalyticsService {
       subscriptionRevenue,
       averageAuditsPerUser,
       topPerformingUsers: topUsers,
-      userGrowth
+      userGrowth,
     };
   }
 
@@ -164,8 +167,8 @@ export class AnalyticsService {
     const audits = await prisma.audit.findMany({
       where: {
         status: 'completed',
-        score: { not: null }
-      }
+        score: { not: null },
+      },
     });
 
     // Calculate average score
@@ -274,17 +277,19 @@ export class AnalyticsService {
   public async getCompetitorTracking(): Promise<CompetitorTracking> {
     const audits = await prisma.audit.findMany({
       where: {
-        status: 'completed'
-      }
+        status: 'completed',
+      },
     });
 
     // Analyze competitor data
     const competitorData = audits.flatMap((audit: any) => {
       const gaps = audit.competitorGaps as any;
-      return Array.isArray(gaps) ? gaps.map((comp: any) => ({
-        ...comp,
-        auditId: audit.id
-      })) : [];
+      return Array.isArray(gaps)
+        ? gaps.map((comp: any) => ({
+            ...comp,
+            auditId: audit.id,
+          }))
+        : [];
     });
 
     // Group by competitor URL
@@ -295,7 +300,7 @@ export class AnalyticsService {
           scores: [],
           strengths: [],
           weaknesses: [],
-          gaps: []
+          gaps: [],
         };
       }
       acc[comp.url].scores.push(comp.score || 0);
@@ -309,12 +314,13 @@ export class AnalyticsService {
     const topCompetitors = Object.values(competitorGroups)
       .map((comp: any) => ({
         url: comp.url,
-        averageScore: comp.scores.length > 0 
-          ? comp.scores.reduce((a: number, b: number) => a + b, 0) / comp.scores.length 
-          : 0,
+        averageScore:
+          comp.scores.length > 0
+            ? comp.scores.reduce((a: number, b: number) => a + b, 0) / comp.scores.length
+            : 0,
         analysisCount: comp.scores.length,
         strengths: [...new Set(comp.strengths)].slice(0, 5),
-        weaknesses: [...new Set(comp.weaknesses)].slice(0, 5)
+        weaknesses: [...new Set(comp.weaknesses)].slice(0, 5),
       }))
       .sort((a: any, b: any) => b.averageScore - a.averageScore)
       .slice(0, 10);
@@ -330,7 +336,7 @@ export class AnalyticsService {
       .map(([gap, frequency]: [string, any]) => ({
         gap,
         frequency: frequency as number,
-        opportunity: (frequency as number) * 10 // Simple opportunity score
+        opportunity: (frequency as number) * 10, // Simple opportunity score
       }))
       .sort((a: any, b: any) => b.frequency - a.frequency)
       .slice(0, 10);
@@ -338,15 +344,18 @@ export class AnalyticsService {
     // Calculate industry benchmarks
     const allScores = audits.map((audit: any) => audit.score!).filter((score: number) => score > 0);
     const industryBenchmarks = {
-      averageScore: allScores.length > 0 ? allScores.reduce((a: number, b: number) => a + b, 0) / allScores.length : 0,
+      averageScore:
+        allScores.length > 0
+          ? allScores.reduce((a: number, b: number) => a + b, 0) / allScores.length
+          : 0,
       topScore: allScores.length > 0 ? Math.max(...allScores) : 0,
-      bottomScore: allScores.length > 0 ? Math.min(...allScores) : 0
+      bottomScore: allScores.length > 0 ? Math.min(...allScores) : 0,
     };
 
     return {
       topCompetitors: topCompetitors as any,
       competitorGaps,
-      industryBenchmarks
+      industryBenchmarks,
     };
   }
 

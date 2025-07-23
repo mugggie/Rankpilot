@@ -978,14 +978,14 @@ const analyticsService = new AnalyticsService();
 app.get('/api/audit/:id/export/pdf', requireAuth, async (req: AuthenticatedRequest, res, next) => {
   try {
     if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
-    
+
     const auditId = req.params.id;
     const audit = await prisma.audit.findUnique({
       where: { id: auditId },
       include: {
         project: true,
-        user: true
-      }
+        user: true,
+      },
     });
 
     if (!audit) return res.status(404).json({ error: 'Audit not found' });
@@ -998,11 +998,11 @@ app.get('/api/audit/:id/export/pdf', requireAuth, async (req: AuthenticatedReque
       createdAt: audit.createdAt.toISOString(),
       analysis: audit.semanticData as any,
       projectName: audit.project.name,
-      userName: audit.user.name || 'Unknown'
+      userName: audit.user.name || 'Unknown',
     };
 
     const pdfBuffer = await reportGenerator.generatePDF(reportData);
-    
+
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="audit-report-${auditId}.pdf"`);
     res.send(pdfBuffer);
@@ -1015,13 +1015,13 @@ app.get('/api/audit/:id/export/pdf', requireAuth, async (req: AuthenticatedReque
 app.get('/api/export/audits.csv', requireAuth, async (req: AuthenticatedRequest, res, next) => {
   try {
     if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
-    
+
     const audits = await prisma.audit.findMany({
       where: { userId: req.user.id },
       include: {
         project: true,
-        user: true
-      }
+        user: true,
+      },
     });
 
     const csvData = audits.map((audit: any) => ({
@@ -1038,11 +1038,11 @@ app.get('/api/export/audits.csv', requireAuth, async (req: AuthenticatedRequest,
       mobileOptimization: (audit.semanticData as any)?.metrics?.mobileOptimization || 0,
       issuesCount: (audit.semanticData as any)?.issues?.length || 0,
       recommendationsCount: (audit.semanticData as any)?.recommendations?.length || 0,
-      competitorsCount: (audit.semanticData as any)?.competitorAnalysis?.length || 0
+      competitorsCount: (audit.semanticData as any)?.competitorAnalysis?.length || 0,
     }));
 
     const csv = csvExporter.exportAuditsToCSV(csvData);
-    
+
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', 'attachment; filename="audits-export.csv"');
     res.send(csv);
@@ -1052,64 +1052,88 @@ app.get('/api/export/audits.csv', requireAuth, async (req: AuthenticatedRequest,
 });
 
 // Analytics endpoints (admin only)
-app.get('/api/admin/analytics/users', requireAuth, adminOnly, async (req: AuthenticatedRequest, res, next) => {
-  try {
-    const userAnalytics = await analyticsService.getUserAnalytics();
-    res.json(userAnalytics);
-  } catch (err: unknown) {
-    next(err);
-  }
-});
+app.get(
+  '/api/admin/analytics/users',
+  requireAuth,
+  adminOnly,
+  async (req: AuthenticatedRequest, res, next) => {
+    try {
+      const userAnalytics = await analyticsService.getUserAnalytics();
+      res.json(userAnalytics);
+    } catch (err: unknown) {
+      next(err);
+    }
+  },
+);
 
-app.get('/api/admin/analytics/seo-trends', requireAuth, adminOnly, async (req: AuthenticatedRequest, res, next) => {
-  try {
-    const seoTrends = await analyticsService.getSEOTrends();
-    res.json(seoTrends);
-  } catch (err: unknown) {
-    next(err);
-  }
-});
+app.get(
+  '/api/admin/analytics/seo-trends',
+  requireAuth,
+  adminOnly,
+  async (req: AuthenticatedRequest, res, next) => {
+    try {
+      const seoTrends = await analyticsService.getSEOTrends();
+      res.json(seoTrends);
+    } catch (err: unknown) {
+      next(err);
+    }
+  },
+);
 
-app.get('/api/admin/analytics/competitors', requireAuth, adminOnly, async (req: AuthenticatedRequest, res, next) => {
-  try {
-    const competitorTracking = await analyticsService.getCompetitorTracking();
-    res.json(competitorTracking);
-  } catch (err: unknown) {
-    next(err);
-  }
-});
+app.get(
+  '/api/admin/analytics/competitors',
+  requireAuth,
+  adminOnly,
+  async (req: AuthenticatedRequest, res, next) => {
+    try {
+      const competitorTracking = await analyticsService.getCompetitorTracking();
+      res.json(competitorTracking);
+    } catch (err: unknown) {
+      next(err);
+    }
+  },
+);
 
-app.get('/api/admin/export/analytics.csv', requireAuth, adminOnly, async (req: AuthenticatedRequest, res, next) => {
-  try {
-    const users = await prisma.user.findMany({
-      include: {
-        tier: true,
-        audits: true,
-        usageLogs: true
-      }
-    });
+app.get(
+  '/api/admin/export/analytics.csv',
+  requireAuth,
+  adminOnly,
+  async (req: AuthenticatedRequest, res, next) => {
+    try {
+      const users = await prisma.user.findMany({
+        include: {
+          tier: true,
+          audits: true,
+          usageLogs: true,
+        },
+      });
 
-    const analyticsData = users.map((user: any) => ({
-      userId: user.id,
-      userName: user.name || 'Unknown',
-      email: user.email,
-      tierName: user.tier.name,
-      auditsCreated: user.audits.length,
-      totalTokensUsed: user.usageLogs.reduce((sum: number, log: any) => sum + (log.tokensUsed || 0), 0),
-      lastAuditDate: user.audits.length > 0 ? user.audits[user.audits.length - 1].createdAt.toISOString() : '',
-      subscriptionStatus: user.subscriptionStatus || 'none',
-      monthlyRevenue: user.subscriptionStatus === 'active' ? user.tier.price : 0
-    }));
+      const analyticsData = users.map((user: any) => ({
+        userId: user.id,
+        userName: user.name || 'Unknown',
+        email: user.email,
+        tierName: user.tier.name,
+        auditsCreated: user.audits.length,
+        totalTokensUsed: user.usageLogs.reduce(
+          (sum: number, log: any) => sum + (log.tokensUsed || 0),
+          0,
+        ),
+        lastAuditDate:
+          user.audits.length > 0 ? user.audits[user.audits.length - 1].createdAt.toISOString() : '',
+        subscriptionStatus: user.subscriptionStatus || 'none',
+        monthlyRevenue: user.subscriptionStatus === 'active' ? user.tier.price : 0,
+      }));
 
-    const csv = csvExporter.exportAnalyticsToCSV(analyticsData);
-    
-    res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', 'attachment; filename="user-analytics.csv"');
-    res.send(csv);
-  } catch (err: unknown) {
-    next(err);
-  }
-});
+      const csv = csvExporter.exportAnalyticsToCSV(analyticsData);
+
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename="user-analytics.csv"');
+      res.send(csv);
+    } catch (err: unknown) {
+      next(err);
+    }
+  },
+);
 
 // Error handling middleware
 app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {

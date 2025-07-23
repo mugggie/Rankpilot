@@ -33,7 +33,7 @@ export class APIKeyService {
     return {
       ...apiKey,
       key, // Return the unhashed key for the user
-      lastUsed: apiKey.lastUsed || undefined
+      lastUsed: apiKey.lastUsed || undefined,
     };
   }
 
