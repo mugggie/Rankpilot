@@ -9,5 +9,5 @@ restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
 
 [build.steps]
-install = "pnpm install --frozen-lockfile"
+install = "npm install"
 build = "cd packages/prisma && npx prisma generate --schema=prisma/schema.prisma && cd ../../apps/api && npm run build" 
