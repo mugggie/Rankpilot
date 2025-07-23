@@ -9,7 +9,7 @@ cmds = [
 
 [phases.build]
 cmds = [
-  "cd apps/api && npm run build"
+  "cd apps/api && ln -sf ../../node_modules node_modules && npm run build"
 ]
 
 [start]
