@@ -26,7 +26,6 @@
     "micro": "^10.0.1",
     "node-fetch": "^3.3.2",
     "nodemailer": "^7.0.5",
-    "stripe": "^14.25.0",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.8.3",
     "zod": "^3.25.76",
@@ -40,14 +39,13 @@
     "start": "node dist/index.js",
     "test": "jest",
     "lint": "eslint src/**/*.ts",
-    "format": "prettier --write src/**/*.ts"
+    "format": "prettier --write src/**/*.ts",
+    "start:no-stripe": "STRIPE_SECRET_KEY= npm start"
   },
   "devDependencies": {
-    "@types/jest": "^29.5.14",
-    "@types/jsdom": "^21.1.7",
-    "@types/supertest": "^2.0.16",
-    "jest": "^29.7.0",
-    "supertest": "^6.3.4",
-    "ts-jest": "^29.4.0"
+    "@types/node": "^20.0.0",
+    "eslint": "^8.0.0",
+    "prettier": "^3.0.0",
+    "stripe": "^14.25.0"
   }
 }

@@ -7,7 +7,7 @@ import { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { auditQueue } from './queue';
 import { adminOnly } from './middleware/adminOnly';
-import { getStripe } from './stripe';
+import { getStripe, createMockCheckoutSession, createMockCustomer, createMockBillingPortalSession } from './stripe';
 import bcrypt from 'bcrypt';
 import Stripe from 'stripe';
 import { ReportGenerator } from './services/reportGenerator';
@@ -359,7 +359,14 @@ app.post('/api/create-checkout', requireAuth, async (req: AuthenticatedRequest, 
     if (!priceId) return res.status(400).json({ error: 'Missing priceId' });
     const user = await prisma.user.findUnique({ where: { id: req.user.id } });
     if (!user) return res.status(404).json({ error: 'User not found' });
-    const stripe = await getStripe();
+    
+    const stripe = getStripe();
+    if (!stripe) {
+      // Use mock checkout when Stripe is not available
+      const mockSession = await createMockCheckoutSession(user.id, priceId);
+      return res.json({ url: mockSession.url });
+    }
+    
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'subscription',
@@ -381,12 +388,18 @@ app.post(
   express.raw({ type: 'application/json' }),
   async (req, res, next) => {
     try {
+      const stripe = getStripe();
+      if (!stripe) {
+        console.log('🔧 Mock webhook received - Stripe not configured');
+        return res.json({ received: true, mock: true });
+      }
+      
       const sig = req.headers['stripe-signature'];
       if (!sig) return res.status(400).send('Missing signature');
-      const stripe = await getStripe();
+      
       let event;
       try {
-        event = stripe.webhooks.constructEvent(
+        event = stripe!.webhooks.constructEvent(
           req.body,
           sig,
           process.env.STRIPE_WEBHOOK_SECRET || '',
