@@ -1,12 +1,13 @@
 {
-  "name": "api",
+  "name": "rankpilot-railway",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "packageManager": "pnpm@10.13.1",
+  "description": "RankPilot API for Railway deployment",
+  "main": "apps/api/dist/index.js",
+  "scripts": {
+    "install": "npm install && cd packages/prisma && npx prisma generate --schema=prisma/schema.prisma && cd ../../apps/api && npm install",
+    "build": "cd apps/api && npm run build",
+    "start": "cd apps/api && npm start"
+  },
   "dependencies": {
     "@mozilla/readability": "^0.4.4",
     "@prisma/client": "^6.12.0",
@@ -33,20 +34,9 @@
     "puppeteer": "^22.0.0",
     "json2csv": "^6.0.0"
   },
-  "scripts": {
-    "dev": "ts-node-dev src/index.ts",
-    "build": "tsc --noEmitOnError false || echo 'Build completed with warnings'",
-    "start": "node dist/index.js",
-    "test": "jest",
-    "lint": "eslint src/**/*.ts",
-    "format": "prettier --write src/**/*.ts",
-    "start:no-stripe": "STRIPE_SECRET_KEY= npm start",
-    "postinstall": "echo 'Dependencies installed successfully'"
-  },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "eslint": "^8.0.0",
-    "prettier": "^3.0.0",
-    "stripe": "^14.25.0"
+    "prettier": "^3.0.0"
   }
-}
+} 

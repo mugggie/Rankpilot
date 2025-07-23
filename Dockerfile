@@ -22,8 +22,9 @@ RUN npx prisma generate --schema=prisma/schema.prisma
 
 # Build the API
 WORKDIR /app/apps/api
-# Ensure node_modules is available in API directory
-RUN ln -sf ../../node_modules node_modules
+# Copy node_modules to API directory
+RUN cp -r ../../node_modules .
+RUN npm install
 RUN npm run build
 
 # Build the web app
@@ -53,7 +54,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/
 # Copy API build and dependencies
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
 COPY --from=builder /app/apps/api/package.json ./apps/api/package.json
-COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/apps/api/node_modules ./apps/api/node_modules
 
 # Copy Prisma schema and migrations
 COPY --from=builder /app/packages/prisma ./packages/prisma
