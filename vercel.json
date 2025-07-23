@@ -13,5 +13,11 @@
     "NEXTAUTH_SECRET": "@nextauth_secret",
     "API_BASE_URL": "@api_base_url",
     "STRIPE_PUBLISHABLE_KEY": "@stripe_publishable_key"
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/apps/web/src/pages/api/$1"
+    }
+  ]
 } 
