@@ -10,4 +10,4 @@ restartPolicyMaxRetries = 10
 
 [build.steps]
 install = "npm install"
-build = "cd packages/prisma && npx prisma generate --schema=prisma/schema.prisma && cd ../../apps/api && ln -sf ../../node_modules node_modules && npm run build" 
+build = "cd packages/prisma && npx prisma generate --schema=prisma/schema.prisma && cd ../../apps/api && npm install && npm run build" 
